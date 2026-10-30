@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Krishna Apps And Tools</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="index.html">📱 Krishna Apps And Tools</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <span id="nav-user">
+        <a href="upload.html">Upload App</a>
+        <span id="nav-username"></span>
+        <a href="#" onclick="logout()">Logout</a>
+      </span>
+      <span id="nav-admin"><a href="admin.html">Admin</a></span>
+    </div>
+  </nav>
+  <main class="container">
+    <h1>Admin Panel</h1>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('apps')">Apps</div>
+      <div class="tab" onclick="switchTab('users')">Users</div>
+    </div>
+
+    <!-- Apps tab -->
+    <div id="tab-apps" class="tab-content active">
+      <div id="msg-app"></div>
+      <table>
+        <thead><tr><th>Icon</th><th>Name</th><th>Version</th><th>Uploader</th><th>Downloads</th><th>Actions</th></tr></thead>
+        <tbody id="apps-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Users tab -->
+    <div id="tab-users" class="tab-content">
+      <div id="msg-user"></div>
+      <table>
+        <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="store.js"></script>
+  <script>
+    requireAdmin();
+    initNav();
+    renderAppsTable();
+    renderUsersTable();
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['apps','users'][i] === name));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    function renderAppsTable() {
+      const apps = getApps();
+      document.getElementById('apps-body').innerHTML = apps.length === 0
+        ? '<tr><td colspan="6" style="color:#666">No apps yet.</td></tr>'
+        : apps.map(a => `
+          <tr>
+            <td>${esc(a.icon||'📦')}</td>
+            <td><a href="app.html?id=${a.id}" style="color:#6c63ff">${esc(a.name)}</a></td>
+            <td>${esc(a.version)}</td>
+            <td>${esc(a.uploaderName)}</td>
+            <td>${a.downloads||0}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="removeApp('${a.id}')">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+    }
+
+    function renderUsersTable() {
+      const users = getUsers();
+      const session = getSession();
+      document.getElementById('users-body').innerHTML = users.map(u => `
+        <tr>
+          <td>${esc(u.username)}</td>
+          <td>${esc(u.email)}</td>
+          <td><span class="badge badge-${u.role}">${u.role}</span></td>
+          <td>
+            ${u.id !== session.id ? `
+              <button class="btn btn-sm" onclick="toggleRole('${u.id}')">
+                Make ${u.role === 'admin' ? 'User' : 'Admin'}
+              </button>
+              <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="removeUser('${u.id}')">Delete</button>
+            ` : '<span style="color:#666">You</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function removeApp(id) {
+      if (confirm('Delete this app?')) {
+        deleteApp(id);
+        renderAppsTable();
+      }
+    }
+
+    function toggleRole(id) {
+      const users = getUsers();
+      const u = users.find(u => u.id === id);
+      if (!u) return;
+      u.role = u.role === 'admin' ? 'user' : 'admin';
+      saveUsers(users);
+      renderUsersTable();
+    }
+
+    function removeUser(id) {
+      if (confirm('Delete this user? Their apps remain.')) {
+        saveUsers(getUsers().filter(u => u.id !== id));
+        renderUsersTable();
+      }
+    }
+  </script>
+</body>
+</html>

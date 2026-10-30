@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Krishna Apps And Tools</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="index.html">📱 Krishna Apps And Tools</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <span id="nav-auth">
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </span>
+      <span id="nav-user" style="display:none">
+        <a href="upload.html">⬆ Upload</a>
+        <span id="nav-username"></span>
+        <a href="#" onclick="logout()">Logout</a>
+      </span>
+      <span id="nav-admin" style="display:none">
+        <a href="admin.html">⚙ Admin</a>
+      </span>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="hero">
+      <h1>Discover Android Apps</h1>
+      <p>Upload, share and download APKs — made by real developers.</p>
+      <a class="btn" href="upload.html">⬆ Upload Your App</a>
+    </div>
+
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Search apps by name or description..." oninput="renderApps()" />
+    </div>
+
+    <div class="chips" id="chips"></div>
+
+    <div id="stats" class="stats-bar"></div>
+
+    <div id="app-grid" class="app-grid"></div>
+  </main>
+
+  <script src="store.js"></script>
+  <script>
+    initNav();
+
+    const CATS = ['All', 'Tools', 'Games', 'Productivity', 'Entertainment', 'Other'];
+    let activecat = 'All';
+
+    // Chips
+    document.getElementById('chips').innerHTML = CATS.map(c =>
+      `<span class="chip ${c==='All'?'active':''}" onclick="setcat('${c}')">${c}</span>`
+    ).join('');
+
+    function setcat(c) {
+      activecat = c;
+      document.querySelectorAll('.chip').forEach(el =>
+        el.classList.toggle('active', el.textContent === c)
+      );
+      renderApps();
+    }
+
+    function renderStats() {
+      const apps = getApps();
+      const total = apps.length;
+      const downloads = apps.reduce((s,a) => s + (a.downloads||0), 0);
+      const users = getUsers().length;
+      document.getElementById('stats').innerHTML = [
+        { num: total,     lbl: 'Apps' },
+        { num: downloads, lbl: 'Downloads' },
+        { num: users,     lbl: 'Members' },
+      ].map((s,i) => `
+        <div class="stat-card" style="animation-delay:${i*0.08}s">
+          <div class="num">${s.num}</div>
+          <div class="lbl">${s.lbl}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderApps() {
+      const query = document.getElementById('search').value.toLowerCase();
+      let apps = getApps().filter(a =>
+        (activecat === 'All' || a.category === activecat) &&
+        (a.name.toLowerCase().includes(query) || a.description.toLowerCase().includes(query))
+      );
+      const grid = document.getElementById('app-grid');
+      if (apps.length === 0) {
+        grid.innerHTML = '<p class="empty">No apps found.</p>';
+        return;
+      }
+      grid.innerHTML = apps.map(a => `
+        <a class="app-card" href="app.html?id=${a.id}">
+          <div class="app-icon">${esc(a.icon || '📦')}</div>
+          <div class="app-info">
+            <h3>${esc(a.name)}</h3>
+            <span class="version">v${esc(a.version)}</span>
+            <p>${esc(a.description.slice(0,80))}${a.description.length>80?'…':''}</p>
+            <div class="app-meta">
+              <span>📥 ${a.downloads||0}</span>
+              <span>🗂 ${esc(a.category||'Other')}</span>
+              <span>👤 ${esc(a.uploaderName)}</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    renderStats();
+    renderApps();
+  </script>
+</body>
+</html>

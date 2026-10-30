@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register – Krishna Apps And Tools</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="index.html">📱 Krishna Apps And Tools</a>
+    <div class="nav-links"><a href="login.html">Login</a></div>
+  </nav>
+  <div class="form-card">
+    <h2>Create Account</h2>
+    <div id="msg"></div>
+    <input type="text" id="username" placeholder="Username"/>
+    <input type="email" id="email" placeholder="Email"/>
+    <input type="password" id="pass" placeholder="Password"/>
+    <button class="btn" onclick="doRegister()">Register</button>
+    <p style="text-align:center;margin-top:14px;font-size:0.85rem;color:#888">
+      Have an account? <a href="login.html" style="color:#6c63ff">Login</a>
+    </p>
+  </div>
+  <script src="store.js"></script>
+  <script>
+    if (getSession()) location.href = 'index.html';
+    function doRegister() {
+      const username = document.getElementById('username').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const pass     = document.getElementById('pass').value;
+      if (!username || !email || !pass) {
+        document.getElementById('msg').innerHTML = '<div class="msg error">All fields required.</div>';
+        return;
+      }
+      const res = register(username, email, pass);
+      if (res.error) {
+        document.getElementById('msg').innerHTML = `<div class="msg error">${esc(res.error)}</div>`;
+      } else {
+        location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>

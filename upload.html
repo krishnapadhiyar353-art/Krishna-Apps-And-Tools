@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload App – Krishna Apps And Tools</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="index.html">📱 Krishna Apps And Tools</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <span id="nav-auth"><a href="login.html">Login</a></span>
+      <span id="nav-user" style="display:none">
+        <a href="upload.html">Upload App</a>
+        <span id="nav-username"></span>
+        <a href="#" onclick="logout()">Logout</a>
+      </span>
+      <span id="nav-admin" style="display:none"><a href="admin.html">Admin</a></span>
+    </div>
+  </nav>
+  <div class="form-card" style="max-width:560px">
+    <h2>Upload App</h2>
+    <div id="msg"></div>
+    <label style="color:#aaa;font-size:0.85rem">App Name</label>
+    <input type="text" id="name" placeholder="My Awesome App"/>
+    <label style="color:#aaa;font-size:0.85rem">Version</label>
+    <input type="text" id="version" placeholder="1.0.0"/>
+    <label style="color:#aaa;font-size:0.85rem">Icon (emoji or leave blank)</label>
+    <input type="text" id="icon" placeholder="📦"/>
+    <label style="color:#aaa;font-size:0.85rem">Description</label>
+    <textarea id="desc" placeholder="What does this app do?"></textarea>
+    <label style="color:#aaa;font-size:0.85rem">APK File</label>
+    <input type="file" id="apk" accept=".apk"/>
+    <label style="color:#aaa;font-size:0.85rem;margin-top:4px">Category</label>
+    <select id="category">
+      <option>Tools</option>
+      <option>Games</option>
+      <option>Productivity</option>
+      <option>Entertainment</option>
+      <option>Other</option>
+    </select>
+    <button class="btn" style="margin-top:6px" onclick="doUpload()">Upload</button>
+  </div>
+  <script src="store.js"></script>
+  <script>
+    const session = requireLogin();
+    initNav();
+
+    function doUpload() {
+      const name     = document.getElementById('name').value.trim();
+      const version  = document.getElementById('version').value.trim();
+      const icon     = document.getElementById('icon').value.trim() || '📦';
+      const desc     = document.getElementById('desc').value.trim();
+      const apkFile  = document.getElementById('apk').files[0];
+      const category = document.getElementById('category').value;
+      const msgEl    = document.getElementById('msg');
+
+      if (!name || !version || !desc || !apkFile) {
+        msgEl.innerHTML = '<div class="msg error">All fields except icon are required.</div>';
+        return;
+      }
+      if (!apkFile.name.endsWith('.apk')) {
+        msgEl.innerHTML = '<div class="msg error">File must be an .apk</div>';
+        return;
+      }
+
+      // Store APK as base64 (works for small APKs; large files need a real backend)
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const app = addApp({
+          name, version, icon, description: desc, category,
+          apkName: apkFile.name,
+          apkData: e.target.result,
+          uploaderId: session.id,
+          uploaderName: session.username
+        });
+        msgEl.innerHTML = '<div class="msg success">App uploaded! Redirecting...</div>';
+        setTimeout(() => location.href = `app.html?id=${app.id}`, 1200);
+      };
+      reader.readAsDataURL(apkFile);
+    }
+  </script>
+</body>
+</html>

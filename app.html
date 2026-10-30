@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>App – Krishna Apps And Tools</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="index.html">📱 Krishna Apps And Tools</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <span id="nav-auth"><a href="login.html">Login</a><a href="register.html">Register</a></span>
+      <span id="nav-user" style="display:none">
+        <a href="upload.html">Upload App</a>
+        <span id="nav-username"></span>
+        <a href="#" onclick="logout()">Logout</a>
+      </span>
+      <span id="nav-admin" style="display:none"><a href="admin.html">Admin</a></span>
+    </div>
+  </nav>
+  <main class="container">
+    <div id="content"></div>
+  </main>
+  <script src="store.js"></script>
+  <script>
+    initNav();
+    const params = new URLSearchParams(location.search);
+    const app = getAppById(params.get('id'));
+    const el = document.getElementById('content');
+
+    if (!app) {
+      el.innerHTML = '<p class="empty">App not found. <a href="index.html" style="color:#6c63ff">Go home</a></p>';
+    } else {
+      const session = getSession();
+      const canDelete = session && (session.role === 'admin' || session.id === app.uploaderId);
+      el.innerHTML = `
+        <div class="app-detail">
+          <div class="big-icon">${esc(app.icon || '📦')}</div>
+          <h2>${esc(app.name)}</h2>
+          <div class="meta">
+            v${esc(app.version)} &nbsp;·&nbsp; ${esc(app.category || 'Other')}
+            &nbsp;·&nbsp; by ${esc(app.uploaderName)}
+            &nbsp;·&nbsp; ${app.downloads || 0} downloads
+            &nbsp;·&nbsp; ${new Date(app.createdAt).toLocaleDateString()}
+          </div>
+          <p>${esc(app.description)}</p>
+          <a class="btn" href="${app.apkData}" download="${esc(app.apkName)}" onclick="countDownload()">
+            ⬇ Download APK
+          </a>
+          ${canDelete ? `<button class="btn btn-danger" style="margin-left:10px" onclick="doDelete()">Delete</button>` : ''}
+        </div>
+      `;
+    }
+
+    function countDownload() {
+      incrementDownload(app.id);
+    }
+    function doDelete() {
+      if (confirm('Delete this app?')) {
+        deleteApp(app.id);
+        location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>
